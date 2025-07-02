@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "75932651180",
+    "project_id": "audiobook-maker-fdc9d",
+    "storage_bucket": "audiobook-maker-fdc9d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:75932651180:android:283291a84c4c5cf49dd909",
+        "android_client_info": {
+          "package_name": "com.example.audiobook_maker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJk0Tx9LReP4ySS3MBECTePmHZmlQG0Yw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
