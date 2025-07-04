@@ -1,3 +1,4 @@
+import 'package:audiobook_maker/screens/pdfUpload/pdf_upload.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../utils/validators.dart';
@@ -40,7 +41,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const Placeholder()),
+          MaterialPageRoute(builder: (_) => const UploadPDFScreen()),
         );
       }
     } catch (e) {
