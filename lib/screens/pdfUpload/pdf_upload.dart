@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
@@ -17,21 +17,21 @@ class UploadPDFScreen extends StatefulWidget {
 }
 
 class _UploadPDFScreenState extends State<UploadPDFScreen> {
-  String? _pdfPath;
-  String? _pdfText;
-  String? _fileName;
-  String? _pdfUrl;
-  bool _isLoading = false;
-
   final supabase = Supabase.instance.client;
+
+  String? pdfPath;
+  String? pdfText;
+  String? fileName;
+  String? pdfUrl;
+  bool isLoading = false;
 
   Future<void> pickAndProcessPDF() async {
     setState(() {
-      _isLoading = true;
-      _pdfPath = null;
-      _pdfText = null;
-      _fileName = null;
-      _pdfUrl = null;
+      isLoading = true;
+      pdfPath = null;
+      pdfText = null;
+      fileName = null;
+      pdfUrl = null;
     });
 
     try {
@@ -41,12 +41,12 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
       );
 
       if (result == null || result.files.isEmpty) {
-        setState(() => _isLoading = false);
+        setState(() => isLoading = false);
         return;
       }
 
       final pickedFile = File(result.files.single.path!);
-      final fileName = result.files.single.name;
+      final _fileName = result.files.single.name;
       final fileBytes = await pickedFile.readAsBytes();
 
       // Extract text using Syncfusion
@@ -55,8 +55,10 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
       document.dispose();
 
       // Upload PDF to Supabase Storage
-      final pdfRef = 'pdfs/${DateTime.now().millisecondsSinceEpoch}_$fileName';
-      await supabase.storage.from('pdfs').uploadBinary(
+      final pdfRef = 'pdfs/${DateTime.now().millisecondsSinceEpoch}_$_fileName';
+      await supabase.storage
+          .from('pdfs')
+          .uploadBinary(
         pdfRef,
         fileBytes,
         fileOptions: const FileOptions(contentType: 'application/pdf'),
@@ -67,32 +69,27 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
       // Insert to Supabase table
       await supabase.from('audiobooks').insert({
         'user_id': supabase.auth.currentUser!.id,
-        'title': fileName,
+        'title': _fileName,
         'pdf_url': publicUrl,
         'extracted_text': extractedText,
       });
 
       // Save file locally to preview in PDFView
       final dir = await getApplicationDocumentsDirectory();
-      final saved = File('${dir.path}/$fileName');
+      final saved = File('${dir.path}/$_fileName');
       await saved.writeAsBytes(fileBytes);
 
-      // Debug logs
-      print("✅ PDF saved to: ${saved.path}");
-      print("✅ PDF text extracted: ${extractedText.substring(0, 100)}...");
-      print("✅ Supabase public URL: $publicUrl");
-
       setState(() {
-        _fileName = fileName;
-        _pdfPath = saved.path;
-        _pdfText = extractedText;
-        _pdfUrl = publicUrl;
-        _isLoading = false;
+        fileName = _fileName;
+        pdfPath = saved.path;
+        pdfText = extractedText;
+        pdfUrl = publicUrl;
+        isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Error: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -100,32 +97,55 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Upload PDF")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Center(
+          child: Text(
+            "AudioBook App",
+            style: GoogleFonts.poppins(
+              color: Colors.black,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton.icon(
-              onPressed: pickAndProcessPDF,
-              icon: const Icon(Icons.upload_file),
-              label: const Text("Pick PDF File"),
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                onPressed: pickAndProcessPDF,
+                icon: const Icon(Icons.upload_file, color: Colors.white),
+                label: Text(
+                  "Pick PDF File",
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
-            if (_isLoading) const CircularProgressIndicator(),
+            if (isLoading) const CircularProgressIndicator(),
 
-            if (_fileName != null) ...[
+            if (fileName != null) ...[
               Text(
-                "📄 PDF: $_fileName",
+                "PDF: $fileName",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
             ],
 
-            if (_pdfPath != null)
+            if (pdfPath != null)
               SizedBox(
                 height: 250,
                 child: PDFView(
-                  filePath: _pdfPath!,
+                  filePath: pdfPath!,
                   enableSwipe: true,
                   swipeHorizontal: true,
                 ),
@@ -133,16 +153,13 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
 
             const SizedBox(height: 12),
 
-            if (_pdfText != null)
+            if (pdfText != null)
               Flexible(
                 child: SingleChildScrollView(
-                  child: Text(
-                    _pdfText!,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: Text(pdfText!, style: const TextStyle(fontSize: 16)),
                 ),
               )
-            else if (!_isLoading)
+            else if (!isLoading)
               const Text(
                 "Please pick a PDF to extract and view its content.",
                 style: TextStyle(fontStyle: FontStyle.italic),
@@ -150,7 +167,7 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
 
             const SizedBox(height: 16),
 
-            if (_pdfText != null)
+            if (pdfText != null)
               ElevatedButton.icon(
                 icon: const Icon(Icons.volume_up),
                 label: const Text("Convert to Audio"),
@@ -159,26 +176,13 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
                   //   context,
                   //   MaterialPageRoute(
                   //     builder: (_) => ConvertAudioScreen(
-                  //       text: _pdfText!,
-                  //       title: _fileName!,
+                  //       text: pdfText!,
+                  //       title: fileName!,
                   //     ),
                   //   ),
                   // );
                 },
               ),
-
-            // Debug Button (optional)
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                print('🔍 Debug Values:');
-                print('File Name: $_fileName');
-                print('PDF Path: $_pdfPath');
-                print('Text: ${_pdfText?.substring(0, 100)}...');
-                print('PDF URL: $_pdfUrl');
-              },
-              child: const Text("Debug Print"),
-            ),
           ],
         ),
       ),
