@@ -172,15 +172,15 @@ class _UploadPDFScreenState extends State<UploadPDFScreen> {
                 icon: const Icon(Icons.volume_up),
                 label: const Text("Convert to Audio"),
                 onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (_) => ConvertAudioScreen(
-                  //       text: pdfText!,
-                  //       title: fileName!,
-                  //     ),
-                  //   ),
-                  // );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ConvertAudioScreen(
+                        text: pdfText!,
+                        title: fileName!,
+                      ),
+                    ),
+                  );
                 },
               ),
           ],
